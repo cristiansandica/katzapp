@@ -1,0 +1,21 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "moduleResolution": "node16",
+    "target": "ESNext",
+    "module": "Node16",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@env": ["env.d.ts"] 
+    }
+  },
+  "include": [
+    "env.d.ts",
+    "svg.d.ts",
+    "src",
+  ]
+}
