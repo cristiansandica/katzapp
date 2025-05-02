@@ -10,6 +10,17 @@ export type User = {
     uid: string, email: string
 }
 
+export type CreateUser = {
+  email: string;
+  password: string;
+}
+
+export type CreatedUser = {
+  uid: string;
+  email: string;
+  isGoogleAccount: boolean;
+}
+
 export interface CreateKatz {
     name: string;
     imageUrl: string;

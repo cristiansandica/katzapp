@@ -87,7 +87,7 @@ export class AuthService {
     } as User);
 
     if (existingUser)
-      throw new BadRequestException("Erorr while creating the user.");
+      throw new BadRequestException("Error while creating the user.");
 
     const salt = await genSalt(10);
 

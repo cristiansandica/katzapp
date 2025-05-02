@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthProvider.tsx';
 import { signInWithGoogle } from '../../utils/googleSignin';
 import useUser from '../../helpers/loginHelper.ts';
 import LinearGradient from 'react-native-linear-gradient';
+import { signUpUser } from '../../utils/api.ts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -19,9 +20,16 @@ GoogleSignin.configure({
 
 const Login = ({ navigation }: Props) => {
     const { checkSignedIn } = useAuth();
-    const { signInUser } = useUser();
+    const { signInGoogleUser, signInCredentialsUser } = useUser();
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('login');
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         const checkUser = async () => {
@@ -31,19 +39,55 @@ const Login = ({ navigation }: Props) => {
         checkUser();
     }, [])
 
-    const handleLogin = async () => {
+    const handleGoogleLogin = async () => {
         console.log('intra1');
         try {
-            const { user, idToken } = await signInWithGoogle();
-            console.log(user, 'intraUser');
+            const { data } = await signInWithGoogle();
+            console.log(data, 'intraUser');
 
-            if (user) {
-                await signInUser(user, idToken, navigation);
+            if (data && data.user && data.idToken) {
+                await signInGoogleUser(data.user, data.idToken, navigation);
             }
         } catch (e) {
             console.error(e, 'Google login failed')
         }
     };
+    const handleLogin = async () => {
+        try {
+            if (!email || !password) {
+                return setErrorMessage("Please enter both email and password.");
+            }
+            await signInCredentialsUser({ email, password }, navigation);
+        } catch (e) {
+            console.error('Login failed', e);
+        }
+    }
+
+    const handleSignup = async () => {
+        
+        if (!email || !password || !confirmPassword) {
+            return setErrorMessage('Please fill in all fields.');
+        }
+
+        if (password !== confirmPassword) {
+            return setErrorMessage('Passwords do not match.');
+        }
+        try {
+            const newUser = { email, password };
+            console.log("New user: ", newUser);
+            
+            await signUpUser(newUser);
+            setErrorMessage('');
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+            setActiveTab('login');
+        } catch (e) {
+            console.error(e.message)
+            setErrorMessage(e.message);
+        }
+    }
+
     if (loading) {
         return (
             <View style={styles.container}>
@@ -59,25 +103,29 @@ const Login = ({ navigation }: Props) => {
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.keyboardAvoid}
                 >
-                    <View style={{ flex: 2, maxHeight: 250, justifyContent: 'center' }}>
-                        <View style={styles.card}>
-                            <Text style={styles.cardTitle}>Welcome to Katz App</Text>
-                            <Text style={styles.cardDescription}>Sign in to start caring for your virtual kitty</Text>
+                    <ScrollView
+                        contentContainerStyle={{ ...styles.scrollContent }}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={{ flex: 2, maxHeight: 250, justifyContent: 'center' }}>
+                            <View style={styles.card}>
+                                <Text style={styles.cardTitle}>Welcome to Katz App</Text>
+                                <Text style={styles.cardDescription}>Sign in to start caring for your virtual kitty</Text>
+                            </View>
+                            <View style={styles.tabContainer}>
+                                <TouchableOpacity
+                                    style={[styles.tab, activeTab === "login" && styles.activeTab]}
+                                    onPress={() => setActiveTab("login")}>
+                                    <Text style={[styles.tabText, activeTab === "login" && styles.activeTabText]}>Login</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tab, activeTab === "signup" && styles.activeTab]}
+                                    onPress={() => setActiveTab("signup")}>
+                                    <Text style={[styles.tabText, activeTab === "signup" && styles.activeTabText]}>Sign Up</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                        <View style={styles.tabContainer}>
-                            <TouchableOpacity
-                                style={[styles.tab, activeTab === "login" && styles.activeTab]}
-                                onPress={() => setActiveTab("login")}>
-                                <Text style={[styles.tabText, activeTab === "login" && styles.activeTabText]}>Login</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.tab, activeTab === "signup" && styles.activeTab]}
-                                onPress={() => setActiveTab("signup")}>
-                                <Text style={[styles.tabText, activeTab === "signup" && styles.activeTabText]}>Sign Up</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                    <ScrollView contentContainerStyle={{...styles.scrollContent}}>
                         {activeTab === 'login' ? (
                             <View style={styles.form}>
                                 <View style={styles.inputGroup}>
@@ -85,8 +133,8 @@ const Login = ({ navigation }: Props) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="kitty@example.com"
-
-                                        //   onChangeText={"setEmail"}
+                                        value={email}
+                                        onChangeText={setEmail}
                                         keyboardType="email-address"
                                         autoCapitalize="none"
                                     />
@@ -97,8 +145,8 @@ const Login = ({ navigation }: Props) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Enter your password"
-                                        // value={"password"}
-                                        //   onChangeText={setPassword}
+                                        value={password}
+                                        onChangeText={setPassword}
                                         secureTextEntry
                                     />
                                 </View>
@@ -112,7 +160,7 @@ const Login = ({ navigation }: Props) => {
                                     style={{ width: 'auto' }}
                                     size={GoogleSigninButton.Size.Wide}
                                     color={GoogleSigninButton.Color.Dark}
-                                    onPress={handleLogin}
+                                    onPress={handleGoogleLogin}
                                 />
                             </View>
                         ) : (
@@ -122,11 +170,17 @@ const Login = ({ navigation }: Props) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="kitty@example.com"
-                                        // value={"email"}
-                                        // onChangeText={setEmail}
+                                        value={email}
+                                        onChangeText={(text) => {
+                                            setEmail(text);
+                                            setErrorMessage('');
+                                        }}
                                         keyboardType="email-address"
                                         autoCapitalize="none"
                                     />
+                                    {errorMessage ? (
+                                        <Text style={{ color: 'red', marginBottom: 10 }}>{errorMessage}</Text>
+                                    ) : null}
                                 </View>
 
                                 <View style={styles.inputGroup}>
@@ -134,10 +188,16 @@ const Login = ({ navigation }: Props) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Create a password"
-                                        // value={"password"}
-                                        // onChangeText={setPassword}
+                                        value={password}
+                                        onChangeText={(text) => {
+                                            setPassword(text);
+                                            setErrorMessage('');
+                                        }}
                                         secureTextEntry
                                     />
+                                    {errorMessage ? (
+                                        <Text style={{ color: 'red', marginBottom: 10 }}>{errorMessage}</Text>
+                                    ) : null}
                                 </View>
 
                                 <View style={styles.inputGroup}>
@@ -145,14 +205,20 @@ const Login = ({ navigation }: Props) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Confirm your password"
-                                        // value={"confirmPassword"}
-                                        // onChangeText={setConfirmPassword}
+                                        value={confirmPassword}
+                                        onChangeText={(text) => {
+                                            setConfirmPassword(text);
+                                            setErrorMessage('');
+                                        }}
                                         secureTextEntry
                                     />
+                                    {errorMessage ? (
+                                        <Text style={{ color: 'red', marginBottom: 10 }}>{errorMessage}</Text>
+                                    ) : null}
                                 </View>
 
                                 <TouchableOpacity style={styles.button}
-                                //  onPress={handleSignup}
+                                    onPress={handleSignup}
                                 >
                                     <Text style={styles.buttonText}>Sign Up</Text>
                                 </TouchableOpacity>
@@ -178,7 +244,9 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     scrollContent: {
-        flex: 4,
+        // flex: 4,
+        flexGrow: 1,
+        justifyContent: 'center'
     },
     card: {
         borderRadius: 12,

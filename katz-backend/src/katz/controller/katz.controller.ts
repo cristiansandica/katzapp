@@ -10,8 +10,12 @@ export class KatzController {
   @UseGuards(AuthGuard)
   @Post("/create")
   createKatz(@Body() createKatzDto: CreateKatzDto, @Req() req) {
-    return this.katzService.create({
+    const createKatz = {
       ...createKatzDto,
+      userId: req.user.uid
+    }
+    return this.katzService.create({
+      ...createKatz
     });
   }
 

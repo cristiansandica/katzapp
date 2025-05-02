@@ -2,7 +2,7 @@
 import {
     GoogleSignin,
 } from '@react-native-google-signin/google-signin';
-import { CreateKatz, Katz, RootStackParamList, User } from './types';
+import { CreatedUser, CreateKatz, CreateUser, Katz, RootStackParamList, User } from './types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export const handleSignOut = async <
@@ -41,6 +41,41 @@ export const createUser = async (token: string): Promise<User> => {
     return resp.json();
 }
 
+export const signInUser = async (user: { email: string; password: string }): Promise<{ access_token: string }> => {
+    const resp = await fetch(`${process.env.BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+    });
+
+    if (!resp.ok) {
+        const errorBody = await resp.json();
+        throw new Error(errorBody.message || 'Login failed');
+    }
+
+    return await resp.json();
+};
+
+export const signUpUser = async (user: { email: string; password: string }) => {
+    const resp = await fetch(`${process.env.BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+    });
+    const data = await resp.json();
+    console.log("CreatedUser: ", data);
+
+    if(!resp.ok){
+        throw new Error(data.message)
+    }
+
+    return data;
+}
+
 export const createKatz = async (token: string | null, name: string, imageUrl: string) => {
     const response = await fetch(`${process.env.BASE_URL}/katz/create`, {
         method: 'POST',
@@ -70,9 +105,9 @@ export const getUserKatz = async (token: string): Promise<Katz> => {
             'Authorization': 'Bearer ' + token,
         },
     });
-        console.log('getUserKatz', resp);
-        
-    return resp.json();
+    console.log('getUserKatz', resp);
+
+    return await resp.json();
 }
 
 export const authAPI = {

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState } from 'react'
-import { CreateKatz, Katz, RootStackParamList, User } from '../utils/types';
+import { Katz, RootStackParamList, User } from '../utils/types';
 import { trySilentSignIn } from '../utils/googleSignin';
 import useUser from '../helpers/loginHelper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,14 +36,14 @@ export const useAuth = () => {
     T extends keyof RootStackParamList = keyof RootStackParamList
   >(navigation: NativeStackNavigationProp<RootStackParamList, T>) => {
     try {
-      const { signInUser } = useUser();
+      const { signInGoogleUser } = useUser();
 
       const response = await trySilentSignIn();
 
       if (!response || !response.data || !response.data.idToken)
         throw new Error('Silent Sign In not successful')
 
-      signInUser(response.data.user, response.data.idToken, navigation);
+      signInGoogleUser(response.data.user, response.data.idToken, navigation);
     } catch (err) {
       console.log('User not signed in silently');
     }

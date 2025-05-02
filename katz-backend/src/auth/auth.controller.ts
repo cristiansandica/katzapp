@@ -23,6 +23,8 @@ export class AuthController {
 
   @Post("login")
   async logIn(@Body() user: CreateUserDto) {
-    return await this.authService.login(user);
+    const res = await this.authService.login(user);
+    console.log("Intra credentiaLogin: ", res)
+    return res;
   }
 }

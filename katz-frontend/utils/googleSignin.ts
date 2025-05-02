@@ -20,8 +20,10 @@ export const signInWithGoogle = async () => {
         await GoogleSignin.hasPlayServices();
         const userInfo = await GoogleSignin.signIn();
         return {
-            user: userInfo.data?.user,
-            idToken: userInfo.data?.idToken!,
+            data: {
+                user: userInfo.data?.user,
+                idToken: userInfo.data?.idToken,
+            }
         };
     } catch (error) {
         if (isErrorWithCode(error)) {

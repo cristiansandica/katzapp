@@ -61,14 +61,14 @@ const KatzUI = ({ navigation }: Props) => {
     return () => clearInterval(interval);
   }, []);
 
-  if (!katz) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Loading your Katz...</Text>
-      </View>
-    );
-  }
+  // if (!katz) {
+  //   return (
+  //     <View style={styles.loadingContainer}>
+  //       <ActivityIndicator size="large" />
+  //       <Text style={styles.loadingText}>Loading your Katz...</Text>
+  //     </View>
+  //   );
+  // }
 
   const handleFeed = (label: string) => {
     setMeters(prevMeters =>

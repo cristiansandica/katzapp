@@ -1,7 +1,7 @@
 
 import { useAuth } from "../context/AuthProvider";
-import { createUser, getUserKatz } from '../utils/api';
-import { GoogleUser, RootStackParamList } from '../utils/types';
+import { createUser, getUserKatz, signInUser } from '../utils/api';
+import { GoogleUser, Katz, RootStackParamList, User } from '../utils/types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const useUser = () => {
@@ -11,7 +11,7 @@ const useUser = () => {
         setUser({ uid: user?.id ?? '', email: user?.email ?? '' });
     }
 
-    const signInUser = async  <T extends keyof RootStackParamList = keyof RootStackParamList>(
+    const signInGoogleUser = async  <T extends keyof RootStackParamList = keyof RootStackParamList>(
         user: GoogleUser | undefined,
         token: string,
         navigation: NativeStackNavigationProp<RootStackParamList, T>) => {
@@ -21,11 +21,9 @@ const useUser = () => {
             try {
                 await createUser(token);
                 const katz = await getUserKatz(token);
-                console.log(katz, "fetched katz");
-                console.log('Katz fround: :', katz, katz.name, katz.imageUrl);
+                console.log("Fetched katz from googleUser: ", katz);
 
                 if (katz && katz.name && katz.imageUrl) {
-
                     setKatz(katz);
                     navigation.replace('KatzUI');
                 } else {
@@ -37,7 +35,43 @@ const useUser = () => {
         }
     }
 
-    return { signInUser };
+    const decodeJwt = (token: string) => {
+        const payload = token.split('.')[1];
+        return JSON.parse(atob(payload));
+      };
+
+    const signInCredentialsUser = async <T extends keyof RootStackParamList = keyof RootStackParamList>(
+        credentials: { email: string; password: string },
+        navigation: NativeStackNavigationProp<RootStackParamList, T>
+    ) => {
+        try {
+            const { access_token } = await signInUser(credentials);
+            setToken(access_token);
+            const user = decodeJwt(access_token) as User;
+            setUser(user);
+
+            let katz: Katz | null = null;
+            try {
+                katz = await getUserKatz(access_token);
+            }
+            catch (err) {
+                console.log(err);
+            }
+
+            console.log("Fetched katz from credentialUser: ", katz);
+
+            if (katz && katz.name && katz.imageUrl) {
+                setKatz(katz);
+                navigation.replace('KatzUI');
+            } else {
+                navigation.replace('CreateKatzName');
+            }
+        } catch (e) {
+            console.error("Error during email/password login: ", e);
+        }
+    }
+
+    return { signInGoogleUser, signInCredentialsUser };
 }
 
 export default useUser;

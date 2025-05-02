@@ -12,7 +12,7 @@ export class User {
   email: string;
 
   @IsStrongPassword()
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @Column({ default: false })
