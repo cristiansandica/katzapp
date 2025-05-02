@@ -1,14 +1,23 @@
-import { Katz } from 'src/katz/entities/katz.entity';
-import { Entity, PrimaryColumn, Column, OneToOne } from 'typeorm';
+import { Katz } from "src/katz/entities/katz.entity";
+import { IsEmail, IsStrongPassword } from "class-validator";
+import { Entity, PrimaryColumn, Column, OneToOne } from "typeorm";
 
-@Entity('users')
+@Entity("users")
 export class User {
-    @PrimaryColumn()
-    uid: string;
+  @PrimaryColumn()
+  uid: string;
 
-    @Column()
-    email: string;
+  @IsEmail()
+  @Column()
+  email: string;
 
-    @OneToOne(() => Katz, (katz) => katz.user)
-    kat: Katz
+  @IsStrongPassword()
+  @Column()
+  password: string;
+
+  @Column({ default: false })
+  isGoogleAccount: boolean;
+
+  @OneToOne(() => Katz, (katz) => katz.user)
+  kat: Katz;
 }
